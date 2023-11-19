@@ -45,6 +45,8 @@ au FocusGained,BufEnter * silent! checktime
 " like <leader>w saves the current file
 let mapleader = ","
 
+set mouse=a
+
 " Fast saving
 nmap <leader>w :w!<cr>
 
@@ -384,3 +386,64 @@ function! VisualSelection(direction, extra_filter) range
     let @/ = l:pattern
     let @" = l:saved_reg
 endfunction
+noremap V <C-v>
+noremap %V V
+"打开文件，光标回到上次编辑的位置
+au BufReadPost * if line("'\"") > 1 && line("'\"") <= line("$") | exe "normal! g'\"" | endif
+set showcmd
+set number
+set autowriteall
+set clipboard=unnamedplus
+" 设置复制到本地剪切板
+function Copy()
+  let c = join(v:event.regcontents,"\n")
+  let c64 = system("base64", c)
+  let s = "\e]52;c;" . trim(c64) . "\x07"
+  call s:raw_echo(s)
+endfunction
+
+function! s:raw_echo(str)
+  if has('win32') && has('nvim')
+    call chansend(v:stderr, a:str)
+  else
+    if filewritable('/dev/fd/2')
+      call writefile([a:str], '/dev/fd/2', 'b')
+    else
+      exec("silent! !echo " . shellescape(a:str))
+      redraw!
+    endif
+  endif
+endfunction
+
+autocmd TextYankPost * call Copy()
+nnoremap S :w<CR>
+nnoremap Q :q<CR>
+nnoremap LINE ^v$
+set scrolloff=5
+set sidescrolloff=5
+set sidescroll=1
+noremap - gg
+set list
+set listchars=tab:▸\ ,trail:▪
+set listchars=tab:>-,trail:-
+inoremap <C-o> <Esc>o
+nnoremap NHS :nohlsearch<CR>
+set cursorline           " 高亮显示当前行
+set whichwrap+=<,>,h,l   " 设置光标键跨行
+set ttimeoutlen=0        " 设置<ESC>键响应时间
+set virtualedit=block,onemore   " 允许光标出现在最后一个字符的后面
+set hidden               " 设置允许在未保存切换buffer
+set matchpairs+=<:>      " 设置%匹配<>
+vnoremap < <g<ESC>
+vnoremap > >g<ESC>
+vnoremap i I
+nnoremap < v<g<ESC>
+nnoremap > v>g<ESC>
+noremap H ^
+noremap L $
+noremap K 10k
+noremap J 10j
+map Y ^y$
+nnoremap yp yyp
+nnoremap nu :set nu!<CR>
+nnoremap rnu :set rnu!<CR>
